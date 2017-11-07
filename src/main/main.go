@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 
 	"../hack"
 	"cloud.google.com/go/firestore"
@@ -44,6 +45,8 @@ func main() {
 
 // ExportStored 匯出
 func ExportStored(ctx context.Context, cli *firestore.Client, path string) {
+	lock := sync.RWMutex{}
+	wg := sync.WaitGroup{}
 	// 取得目前工作目錄
 	wd, err := os.Getwd()
 	hack.PrintErrorExit(err)
@@ -55,19 +58,26 @@ func ExportStored(ctx context.Context, cli *firestore.Client, path string) {
 		snap, err := snap.Documents(ctx).GetAll()
 		hack.PrintError(err)
 		for _, snap := range snap {
-			b, _ := json.Marshal(snap.Data())
-			if len(path) > 0 {
-				newPath := fmt.Sprintf("%s/%s/%s", wd, path, snap.Ref.Parent.Path)
-				_, err := os.Stat(newPath)
-				if os.IsNotExist(err) {
-					err = os.MkdirAll(newPath, os.ModePerm)
+			wg.Add(1)
+			go func(snap firestore.DocumentSnapshot) {
+				defer wg.Done()
+				b, _ := json.Marshal(snap.Data())
+				if len(path) > 0 {
+					newPath := fmt.Sprintf("%s/%s/%s", wd, path, snap.Ref.Parent.Path)
+					lock.Lock()
+					_, err := os.Stat(newPath)
+					if os.IsNotExist(err) {
+						err = os.MkdirAll(newPath, os.ModePerm)
+						hack.PrintError(err)
+					}
+					lock.Unlock()
+					err = ioutil.WriteFile(fmt.Sprintf("%s/%s", newPath, fmt.Sprintf("%s.json", snap.Ref.ID)), b, os.ModePerm)
 					hack.PrintError(err)
+				} else {
+					fmt.Printf("%s: %v\n", snap.Ref.Path, string(b))
 				}
-				err = ioutil.WriteFile(fmt.Sprintf("%s/%s", newPath, fmt.Sprintf("%s.json", snap.Ref.ID)), b, os.ModePerm)
-				hack.PrintError(err)
-			} else {
-				fmt.Printf("%s: %v\n", snap.Ref.Path, string(b))
-			}
+			}(*snap)
 		}
 	}
+	wg.Wait()
 }
