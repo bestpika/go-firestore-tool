@@ -21,7 +21,7 @@ var (
 func init() {
 	flag.StringVar(&firebaseID, "p", "", "要操作的專案")
 	flag.StringVar(&exportPath, "e", "", "匯出路徑")
-	flag.StringVar(&importPath, "i", "", "載入路徑")
+	flag.StringVar(&importPath, "i", "", "匯入路徑")
 	flag.Parse()
 }
 
