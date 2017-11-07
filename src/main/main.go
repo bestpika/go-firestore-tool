@@ -14,8 +14,8 @@ import (
 
 var (
 	firebaseID string
-	importPath string
 	exportPath string
+	importPath string
 )
 
 func init() {
