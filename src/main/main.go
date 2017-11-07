@@ -34,8 +34,8 @@ func main() {
 	// 完成結束
 	defer cli.Close()
 
-	// 如果有匯出路徑則不進行匯入
-	if len(exportPath) > 0 {
+	// 如果有匯出路徑或兩個都沒路徑則不進行匯入
+	if len(exportPath) > 0 || (len(exportPath) == 0 && len(importPath) == 0) {
 		ExportStored(ctx, cli, exportPath)
 	} else if len(importPath) > 0 {
 		// TODO: 匯入
