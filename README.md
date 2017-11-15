@@ -7,3 +7,7 @@
 ```bash
 gcloud auth application-default login
 ```
+
+## 注意
+
+- 目前僅支援 root 底下的 collection

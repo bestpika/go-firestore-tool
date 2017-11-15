@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 	"sync"
 
 	"../hack"
@@ -35,11 +38,15 @@ func main() {
 	// 完成結束
 	defer cli.Close()
 
-	// 如果有匯出路徑或兩個都沒路徑則不進行匯入
+	/*
+		1. 有匯出路徑 => 匯出
+		2. 沒匯出路徑、沒匯入路徑 => 匯出，但只顯示內容
+		3. 沒匯出路徑、有匯入路徑 => 匯入
+	*/
 	if len(exportPath) > 0 || (len(exportPath) == 0 && len(importPath) == 0) {
 		ExportStored(ctx, cli, exportPath)
 	} else if len(importPath) > 0 {
-		// TODO: 匯入
+		ImportStored(ctx, cli, importPath)
 	}
 }
 
@@ -78,6 +85,38 @@ func ExportStored(ctx context.Context, cli *firestore.Client, path string) {
 				}
 			}(*snap)
 		}
+	}
+	wg.Wait()
+}
+
+// ImportStored 匯入
+func ImportStored(ctx context.Context, cli *firestore.Client, path string) {
+	wg := sync.WaitGroup{}
+	wd, err := os.Getwd()
+	path = fmt.Sprintf("%s/%s", wd, path)
+	fileList := []string{}
+	// 把檔案列表讀出來
+	err = filepath.Walk(path, func(path string, file os.FileInfo, err error) error {
+		if !file.IsDir() {
+			path = strings.Replace(path, "\\", "/", -1)
+			fileList = append(fileList, path)
+		}
+		hack.PrintError(err)
+		return nil
+	})
+	hack.PrintErrorExit(err)
+	for _, path := range fileList {
+		wg.Add(1)
+		go func(path string) {
+			defer wg.Done()
+			ref := regexp.MustCompile("/databases/\\(default\\)/documents/((.+)/(.+))\\.json").FindSubmatch([]byte(path))
+			var data map[string]interface{}
+			file, _ := ioutil.ReadFile(path)
+			json.Unmarshal(file, &data)
+			dt, err := cli.Doc(string(ref[1])).Set(ctx, data)
+			fmt.Printf("%s: %s\n", dt.UpdateTime, ref[1])
+			hack.PrintError(err)
+		}(path)
 	}
 	wg.Wait()
 }
