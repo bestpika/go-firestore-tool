@@ -8,6 +8,12 @@
 gcloud auth application-default login
 ```
 
+## 路徑格式
+
+```bash
+DIR/projects/PROJECT/databases/(default)/documents/COLLECTION/DOCUMENT.json
+```
+
 ## 注意
 
 - 目前僅支援 root 底下的 collection
