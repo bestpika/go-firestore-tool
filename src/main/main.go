@@ -20,12 +20,14 @@ var (
 	firebaseID string
 	exportPath string
 	importPath string
+	doMergeAll string
 )
 
 func init() {
 	flag.StringVar(&firebaseID, "p", "", "要操作的專案")
 	flag.StringVar(&exportPath, "e", "", "匯出路徑")
 	flag.StringVar(&importPath, "i", "", "匯入路徑")
+	flag.StringVar(&doMergeAll, "m", "", "是否合併")
 	flag.Parse()
 }
 
@@ -113,7 +115,12 @@ func ImportStored(ctx context.Context, cli *firestore.Client, path string) {
 			var data map[string]interface{}
 			file, _ := ioutil.ReadFile(path)
 			json.Unmarshal(file, &data)
-			dt, err := cli.Doc(string(ref[1])).Set(ctx, data)
+			var dt *firestore.WriteResult
+			if doMergeAll == "yes" {
+				dt, err = cli.Doc(string(ref[1])).Set(ctx, data, firestore.MergeAll)
+			} else {
+				dt, err = cli.Doc(string(ref[1])).Set(ctx, data)
+			}
 			fmt.Printf("%s: %s\n", dt.UpdateTime, ref[1])
 			hack.PrintError(err)
 		}(path)
