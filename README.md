@@ -16,10 +16,10 @@ WORKDIR/projects/PROJECT/databases/(default)/documents/COLLECTION/DOCUMENT.json
 
 ## 指令
 
-- `-p PROJECT`: 要操作的專案*
-- `-e PATH`: 匯出路徑
-- `-i PATH`: 匯入路徑
-- `-m yes/no`: 是否合併
+- `-p=PROJECT`: 要操作的專案*
+- `-e=PATH`: 匯出路徑
+- `-i=PATH`: 匯入路徑
+- `-m=yes/no`: 是否合併
 
 ### 範例
 
