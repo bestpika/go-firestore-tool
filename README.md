@@ -11,7 +11,21 @@ gcloud auth application-default login
 ## 路徑格式
 
 ```bash
-DIR/projects/PROJECT/databases/(default)/documents/COLLECTION/DOCUMENT.json
+WORKDIR/projects/PROJECT/databases/(default)/documents/COLLECTION/DOCUMENT.json
+```
+
+## 指令
+
+- `-p PROJECTID`: 要操作的專案*
+- `-e PATH`: 匯出路徑
+- `-i PATH`: 匯入路徑
+- `-m yes/no`: 是否合併
+
+### 範例
+
+```bash
+.\firestore.exe -p=project -e=backup # 匯出
+.\firestore.exe -p=project -i=backup -m=no # 匯入
 ```
 
 ## 注意
